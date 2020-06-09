@@ -43,7 +43,7 @@ global _start
 _start: cld
         mov [var_S0],esp
         mov ebp,return_stack_top
-        ;call setup_data_segment
+        ;call setup_data_segment ;FIXME: uncomment when implemented
         mov esi,cold_start
         next
 
@@ -52,46 +52,75 @@ cold_start: dd quit
 
 ;; defword NAME,LEN(NAME),FLAGS(0),LABEL
 %macro defword 4
-  section .rodata
-          align ALIGN
-          global name_%4
-  name_%4:
-          dd link                   ; current link address
-          mov dword [link],name_%4  ; update link
-          db %3+%2                  ; store FLAGS+LEN as byte
-          dd '%1'                   ; store the actual name
-          align ALIGN
-          global %4
-  %4:
-          docol
+section .rodata
+        align ALIGN
+        global name_%4
+name_%4:
+        dd link                   ; current link address
+        mov dword [link],name_%4  ; update link
+        db %3+%2                  ; store FLAGS+LEN as byte
+        dd '%1'                   ; store the actual name
+        align ALIGN
+        global %4
+%4:
+        dd docolon
 %endmacro
 
 ;; defcode NAME,LEN(NAME),FLAGS(0),LABEL
 %macro defcode 4
-  section .data
-          align ALIGN
-          global name_%4
-  name_%4:
-          dd link                   ; current link address
-          mov dword [link],name_%4  ; update link
-          db %3+%2                  ; store FLAGS+LEN as byte
-          dd '%1'                   ; store the actual name
-          align ALIGN
-          global %4
-  %4:
-          dd code_%4
-  section .text
-          global code_%4
-  code_%4:
+section .data
+        align ALIGN
+        global name_%4
+name_%4:
+        dd link                   ; current link address
+        mov dword [link],name_%4  ; update link
+        db %3+%2                  ; store FLAGS+LEN as byte
+        dd '%1'                   ; store the actual name
+        align ALIGN
+        global %4
+%4:
+        dd code_%4
+section .text
+        global code_%4
+code_%4:
 %endmacro
 
-defcode 'drop',4,0,drop
+        defcode 'drop',4,0,drop
         pop eax
         next
 
-defcode 'swap',4,0,swap
+        defcode 'swap',4,0,swap
         pop eax
         pop ebx
         push eax
         push ebx
         next
+
+        defcode 'dup',3,0,dup
+        mov eax,esp
+        push eax
+        next
+
+        defcode 'over',4,0,over
+        mov eax,[esp+ALIGN]
+        push eax
+        next
+
+        defcode 'rot',3,0,rot
+        pop eax
+        pop ebx
+        pop ecx
+        push ebx
+        push eax
+        push ecx
+        next
+
+        defword ":",1,0,colon
+        dd dup
+        ;;dd _word
+        ;;dd create
+        ;;dd lit, docolon, comma
+        ;;dd latest, fetch, hidden
+        ;;dd pbrac
+        ;;dd exit
+
