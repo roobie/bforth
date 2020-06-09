@@ -115,6 +115,110 @@ code_%4:
         push ecx
         next
 
+        defcode '-rot',4,0,nrot
+        pop eax
+        pop ebx
+        pop ecx
+        push eax
+        push ecx
+        push ebx
+        next
+
+        defcode '2drop',5,0,twodrop
+        pop eax
+        pop eax
+        next
+
+        defcode '2dup',4,0,twodup
+        mov eax,esp
+        mov ebx,[esp+ALIGN]
+        push ebx
+        push eax
+        next
+
+        defcode '2swap',5,0,twoswap
+        pop eax
+        pop ebx
+        pop ecx
+        pop edx
+        push ebx
+        push eax
+        push edx
+        push ecx
+        next
+
+        defcode '?dup',4,0,qdup
+        mov dword eax,esp
+        test eax,eax
+        jz .1
+        push eax
+.1:     next
+
+        defcode '+',1,0,_add
+        pop eax
+        add dword esp,eax
+        next
+
+        defcode '-',1,0,_sub
+        pop eax
+        sub dword esp,eax
+        next
+
+        defcode '*',1,0,_mul
+        pop eax
+        pop ebx
+        imul dword eax,ebx
+        push eax
+        next
+
+        ;; FIXME: implement more arithmetic
+
+        defcode '/mod',4,0,divmod
+        xor edx,edx
+        pop ebx
+        pop eax
+        idiv dword ebx
+        push edx
+        push eax
+        next
+
+        defcode '=',1,0,equal
+        pop eax
+        pop ebx
+        cmp eax,ebx
+        sete al
+        movzx eax,al
+        push dword eax
+        next
+
+        ;; FIXME: implement more comparisons
+
+        defcode 'exit',4,0,exit
+        poprsp esi
+        next
+
+        defcode 'lit',3,0,lit
+        lodsd
+        push eax
+        next
+
+        ;; FIXME: implement memory access (!, @ etc)
+
+%macro defvar 3
+        push dword %2+4 ;var_
+        next
+section .data
+        align ALIGN
+        var_%1 dd %3
+%endmacro
+        defcode 'latest',6,0,latest
+        defvar latest,6,0
+        ;push dword 10
+        ;next
+        ;section .data
+        ;align ALIGN
+        ;var_latest dd 0
+
         defword ":",1,0,colon
         dd dup
         ;;dd _word
